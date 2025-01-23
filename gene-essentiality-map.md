@@ -1,8 +1,7 @@
-
 # Gene Essentiality – Cancer DepMap Documentation
 
 ## Overview
-The goal of this project is to build a web page that shows the gene essentiality map for a given gene target. The essentiality map will provide insights into the gene's importance for cell survival, especially in the context of cancer, by utilizing data from the Cancer Dependency Map (DepMap). Users will be able to input a gene’s EnsemblID (ENSG) to fetch the corresponding essentiality data.
+The goal of this project is to build a web page that shows the gene essentiality map for a given gene target. The essentiality map will provide insights into the gene's importance for cell survival, especially in the context of cancer, by utilizing data from the Cancer Dependency Map (DepMap). Users will be able to input a gene's EnsemblID (ENSG) to fetch the corresponding essentiality data.
 
 ## Components and Prerequisites
 
@@ -19,13 +18,40 @@ The application will consist of the following major components:
 - **React** and **Next.js** for front-end development.
 - **GraphQL** for data fetching from the DepMap API.
 - **Tailwind CSS** for styling the application.
-- **ShadCN components** for reusable UI components.
+- **ShadCN components** for reusable and good looking UI components.
 
 ### API Integration
-You will use a GraphQL API to fetch the gene essentiality data. The sample JavaScript code to invoke the API is provided below, which should be adapted to meet the project’s needs. It should make a query based on the provided EnsemblID and return the data needed to render the essentiality map.
+You will use a GraphQL API to fetch the gene essentiality data. The sample JavaScript code to invoke the API is provided below, which should be adapted to meet the project's needs. It should make a query based on the provided EnsemblID and return the data needed to render the essentiality map.
+
+
+Example API query:
+```javascript
+query Depmap ($ensemblId: String!) {
+  target(ensemblId: $ensemblId) {
+    id
+    depMapEssentiality {
+      tissueName
+      screens{
+        depmapId
+        cellLineName
+        diseaseFromSource
+        geneEffect
+        expression
+      }
+    }
+  }
+}
+
+
+{
+  "ensemblId": "ENSG00000012048"
+}
+
+```
+
 ## Gene IDs
 
-You should test the application with the following genes and their corresponding EnsemblIDs:
+You can test the application with the following genes and their corresponding EnsemblIDs:
 
 * BRCA1: ENSG00000012048
 * BRCA2: ENSG00000139618
@@ -37,50 +63,88 @@ You should test the application with the following genes and their corresponding
 ### How Developers Use Components
 
 * **Gene Input Field:** 
-    * Developers will need to ensure the input field is capable of accepting a valid EnsemblID. 
-    * This component should be reusable across different parts of the application.
-* **Gene Essentiality Map:** 
-    * Developers will need to integrate the GraphQL query with a visualization library (such as D3.js or Plotly) to render the essentiality map based on the data retrieved.
-* **Tooltip:** 
-    * Implement tooltips to show additional details about each data point in the map when users hover over it.
+    * Developers will need to ensure the input field is capable of accepting a valid EnsemblID.
+    * `GeneEssentialityChart` component should be passed Props regarding EnsemblID, loading state and error and more desirably `theFormComponent` should be able to properly pass on these props to `GeneEssentialityChart`. 
+    * `GeneEssentialityChart` will pass on information regarding these states to the form to show relevent UI hints regarding errors and loading states.
 
-### Creating New Components
+Example:
+```js
+"use client"
 
-If a developer wants to create a new component, they should:
+import { useState } from "react"
+import { GeneSearchForm } from "./Form"
+import { GeneEssentialityChart } from "./GeneEssentialityMap"
 
-1. Identify the functionality and data required for the component.
-2. Create the component in a reusable manner with clear props and states.
-3. Ensure proper integration with other parts of the application, such as the GraphQL API and styling system.
 
-### Storing and Managing Annotations
+export default function MainGeneMap() {
+const [ensemblId, setEnsemblId] = useState("")
+const [loading, setLoading] = useState(false)
+const [error, setError] = useState("")
 
-* Annotations will be managed on the front-end. 
-* Developers can modify or add annotations as needed based on user interactions with the gene essentiality map. 
-* The annotations will be stored temporarily in the browser state, but long-term storage could be added if necessary.
+return (
+    <div className="space-y-4">
+    <GeneSearchForm
+        setEnsemblId={setEnsemblId}
+        loading={loading}
+        error={error}
+    />
+    <GeneEssentialityChart
+        ensemblId={ensemblId}
+        setLoading={setLoading}
+        setError={setError}
+    />
+    </div>
+)
+}
+```
 
-## Using the Components in React and Next.js
 
-* **React:** 
-    * The components will be implemented as functional components in React. 
-    * The state management will be done using React hooks like `useState` and `useEffect` for handling API calls and rendering data.
-* **Next.js:** 
-    * The page will be part of a Next.js application. 
-    * Developers should ensure that the page is optimized for server-side rendering (SSR) or static site generation (SSG), depending on the use case. 
-    * The page will fetch data via the API and render it dynamically.
+## How to download Npm Package
+currently if you directly download the package from `https://npmboot.svc.aganitha.ai/` npm repo it does not have all the required dependencies so it will not work properly.
 
-## Deployment Considerations
+The current work around for this is to download all the dependencies and required packages from the global npm repo and then change your repo to `https://npmboot.svc.aganitha.ai/` and download the component.
 
-* Ensure the GraphQL API is accessible and properly integrated into the deployment environment.
-* The application should be deployed with a scalable cloud solution, such as Vercel or Netlify, which works well with Next.js.
+##### step 1 - Set repo to the main NPM repo
 
-## Extension Possibilities
+```sh
+npm config set registry https://registry.npmjs.org/
+```
 
-* **Export Functionality:** 
-    * Future work can include implementing export options to allow users to download the essentiality data in CSV or other formats.
-* **Multi-Gene Support:** 
-    * The app can be extended to allow users to input multiple EnsemblIDs at once and display maps for each gene.
-* **Advanced Filtering:** 
-    * Developers can add filtering options to the map, enabling users to filter by cell line type, dependency score range, or other relevant factors.
+##### step 2 - Download the gene-essentiality-chart component from npm
+
+```sh
+npm i gene-essentiality-chart
+```
+
+```use --force flag if there is version clash```
+
+##### step 3 - Set the repo back to aganitha
+
+```sh
+npm config set registry https://npmboot.svc.aganitha.ai/
+```
+
+
+```use --force flag if there is version clash```
+##### step 4 - Now install the component back from the aganitha repo
+
+```sh
+npm install @aganitha/gene-essentiality-chart@1.0.0
+```
+
+##### step 5 - Now from the package.json/npm you can remove the `gene-essentiality-chart` npm package (the one we installed from the main NPM repo)
+We initially installed this package from the main NPM repository to ensure all necessary dependencies were obtained. Now that this purpose has been fulfilled, feel free to remove it.
+
+
+##### step 6 - import the package
+
+```js
+import {GeneEssentialityChart} from '@aganitha/gene-essentiality-chart'
+```
+
+```
+Note : This component requires the user to install tailwind or else the component might not look as intended.
+```
 
 ## Testing
 
@@ -106,9 +170,9 @@ Once the initial documentation and design are complete, it should be shared with
 
 ## Roles of the Team members
 
-### Abhijeet (UI/UX Developer)
+### Abhijeet (UI/UX Design)
 
-- Responsibilities:
+Responsibilities:
 * Design and implement the user interface (UI) of the application.
 * Create a visually appealing and user-friendly experience.
 * Develop the Gene Input Field component, ensuring it's reusable and handles valid Ensembl IDs.
@@ -116,9 +180,9 @@ Once the initial documentation and design are complete, it should be shared with
 * Ensure the UI is responsive and adapts well to different screen sizes.
 * Conduct usability testing and gather user feedback to refine the UI.
 
-### Yashraj (UI/UX, Backend/Functionality Developer)
+### Yashraj (UI/UX, Functionality Developer)
 
-- Responsibilities:
+Responsibilities:
 * Develop the core functionalities of the application, including:
 * Integration with the GraphQL API to fetch gene essentiality data.
 * Implementation of the Gene Essentiality Map component, including data visualization and tooltip functionality.
@@ -129,7 +193,7 @@ Once the initial documentation and design are complete, it should be shared with
 
 ### Shilpa (Documentation & Implementation)
 
-- Responsibilities:
+Responsibilities:
 * Maintain comprehensive documentation throughout the development process.
 * Document design decisions, code structure, and API interactions.
 * Create user manuals and tutorials to guide users on how to use the application.
@@ -143,25 +207,3 @@ Once the initial documentation and design are complete, it should be shared with
 * Code reviews to ensure code quality and maintainability.
 * Shared responsibility for testing and debugging.
 * This structure provides a clear division of labor and fosters effective collaboration among the team members.
-
-Example API query:
-```javascript
-query Depmap ($ensemblId: String!) {
-  target(ensemblId: $ensemblId) {
-    id
-    depMapEssentiality {
-      tissueName
-      screens{
-        depmapId
-        cellLineName
-        diseaseFromSource
-        geneEffect
-        expression
-      }
-    }
-  }
-}
-
-{
-  "ensemblId": "ENSG00000012048"
-}
